@@ -211,5 +211,7 @@ Other Platforms
 ===========
 
 Desktop/Laptop: [libquiet](https://github.com/quiet/quiet) and [quiet-lwip](https://github.com/quiet/quiet-lwip)
+
 Javascript: [quiet-js](https://github.com/quiet/quiet-js) *UDP/TCP coming soon*
+
 iOS: *Coming Soon*
