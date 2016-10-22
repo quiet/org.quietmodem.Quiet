@@ -29,6 +29,15 @@ How fast does it go?
 ---------------
 Quiet's provided audible mode transfers at approximately 7kbps. In cases where two devices are connected over a cable (via 3.5mm jack) it can run in cable mode, which transfers at approximately 64kbps.
 
+Other Platforms
+---------------
+
+Desktop/Laptop: [libquiet](https://github.com/quiet/quiet) and [quiet-lwip](https://github.com/quiet/quiet-lwip)
+
+Javascript: [quiet-js](https://github.com/quiet/quiet-js) (*UDP/TCP coming soon*)
+
+iOS: *Coming Soon*
+
 Usage
 ===========
 
@@ -206,12 +215,3 @@ while (true) {
 // when finished, close sSend, sRecv and intf
 
 ```
-
-Other Platforms
-===========
-
-Desktop/Laptop: [libquiet](https://github.com/quiet/quiet) and [quiet-lwip](https://github.com/quiet/quiet-lwip)
-
-Javascript: [quiet-js](https://github.com/quiet/quiet-js) (*UDP/TCP coming soon*)
-
-iOS: *Coming Soon*
