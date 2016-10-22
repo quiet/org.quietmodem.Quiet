@@ -1,13 +1,13 @@
 {
   "audible": {
+    "mod_scheme": "gmsk",
     "checksum_scheme": "crc32",
     "inner_fec_scheme": "v27",
     "outer_fec_scheme": "none",
-    "mod_scheme": "gmsk",
-    "frame_length": 25,
+    "frame_length": 100,
     "modulation": {
       "center_frequency": 4200,
-      "gain": 0.15
+      "gain": 0.1
     },
     "interpolation": {
       "shape": "kaiser",
