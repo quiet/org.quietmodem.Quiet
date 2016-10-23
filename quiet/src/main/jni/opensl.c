@@ -71,7 +71,7 @@ quiet_opensl_producer *opensl_producer_create(size_t num_buf,
     p->buf_idx = 0;
     p->scratch = malloc(p->num_frames * sizeof(quiet_sample_t));
     for (size_t i = 0; i < p->num_buf; i++) {
-        p->buf[i] = malloc(p->num_frames * num_channels * sizeof(int16_t));
+        p->buf[i] = malloc(p->num_frames * num_playback_channels * sizeof(int16_t));
     }
     return p;
 }
@@ -94,7 +94,7 @@ quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
     c->buf_idx = 0;
     c->scratch = malloc(c->num_frames * sizeof(quiet_sample_t));
     for (size_t i = 0; i < c->num_buf; i++) {
-        c->buf[i] = malloc(c->num_frames * num_channels * sizeof(int16_t));
+        c->buf[i] = malloc(c->num_frames * num_record_channels * sizeof(int16_t));
     }
     return c;
 }
@@ -138,7 +138,7 @@ void playback_callback(SLAndroidSimpleBufferQueueItf queueItf,
     for (size_t i = written; i < p->num_frames; i++) {
         p->scratch[i] = 0;
     }
-    size_t num_bytes = p->num_frames * num_channels * sizeof(int16_t);
+    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(int16_t);
     memset(p->buf[p->buf_idx], 0, num_bytes);
     convert_monofloat2stereoint16(p->scratch, p->buf[p->buf_idx],
                                   p->num_frames);
@@ -275,11 +275,11 @@ void quiet_opensl_destroy_player(quiet_opensl_player *player) {
 void record_callback(SLAndroidSimpleBufferQueueItf queueItf, void *user_data) {
     quiet_opensl_recorder *recorder = (quiet_opensl_recorder *)user_data;
     quiet_opensl_consumer *c = (quiet_opensl_consumer *)recorder->consumer;
-    convert_stereo162monofloat(c->buf[c->buf_idx], c->scratch, c->num_frames);
+    convert_stereo162monofloat(c->buf[c->buf_idx], c->scratch, c->num_frames, num_record_channels);
     c->consume(c->consume_arg, c->scratch, c->num_frames);
 
     SLresult res;
-    size_t num_bytes = c->num_frames * num_channels * sizeof(int16_t);
+    size_t num_bytes = c->num_frames * num_record_channels * sizeof(int16_t);
     // Enqueue() expects the number of bytes, not frames or samples
     res = (*queueItf)->Enqueue(queueItf, c->buf[c->buf_idx], num_bytes);
     if (res != SL_RESULT_SUCCESS) {
@@ -312,11 +312,11 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
 
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
-    pcm.numChannels = 2;
+    pcm.numChannels = 1;
     pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+    pcm.channelMask = SL_SPEAKER_FRONT_LEFT;
     pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
     SLDataSink audioSink;
@@ -366,7 +366,7 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
         return res;
     }
 
-    size_t num_bytes = c->num_buf * num_channels * sizeof(int16_t);
+    size_t num_bytes = c->num_buf * num_record_channels * sizeof(int16_t);
     for (size_t i = 0; i < c->num_buf; i++) {
         // Enqueue() expects the number of bytes, not frames or samples
         res = (*bufferQueueItf)

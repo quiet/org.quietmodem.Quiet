@@ -128,11 +128,11 @@ static void loopback_sum_producer(quiet_loopback_system *l,
     for (size_t i = written; i < p->num_frames; i++) {
         p->scratch[i] = 0;
     }
-    size_t num_bytes = p->num_frames * num_channels * sizeof(int16_t);
+    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(int16_t);
     memset(p->buf[0], 0, num_bytes);
     convert_monofloat2stereoint16(p->scratch, p->buf[0],
                                   p->num_frames);
-    for (size_t i = 0; i < p->num_frames * num_channels; i++) {
+    for (size_t i = 0; i < p->num_frames * num_playback_channels; i++) {
         dest[i] += p->buf[0][i];
     }
 }
@@ -140,7 +140,7 @@ static void loopback_sum_producer(quiet_loopback_system *l,
 static void loopback_write_consumer(quiet_loopback_system *l,
                                     quiet_opensl_consumer *c,
                                     int16_t *src) {
-    convert_stereo162monofloat(src, c->scratch, c->num_frames);
+    convert_stereo162monofloat(src, c->scratch, c->num_frames, num_playback_channels);
     c->consume(c->consume_arg, c->scratch, c->num_frames);
 }
 
@@ -148,9 +148,9 @@ static void *loopback_thread(void *args_v) {
     quiet_loopback_system *l = (quiet_loopback_system *)args_v;
     struct timeval now, last_now;
     gettimeofday(&last_now, NULL);
-    int16_t *sample_stereo_buffer = malloc(loopback_buffer_length * num_channels * sizeof(int16_t));
+    int16_t *sample_stereo_buffer = malloc(loopback_buffer_length * num_playback_channels * sizeof(int16_t));
     while (true) {
-        memset(sample_stereo_buffer, 0, loopback_buffer_length * num_channels * sizeof(int16_t));
+        memset(sample_stereo_buffer, 0, loopback_buffer_length * num_playback_channels * sizeof(int16_t));
         pthread_mutex_lock(&l->lock);
 
         if (l->is_closed) {

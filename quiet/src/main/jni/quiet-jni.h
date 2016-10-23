@@ -15,7 +15,8 @@
 #include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "quiet", __VA_ARGS__)
 
-static const unsigned int num_channels = 2;
+static const unsigned int num_playback_channels = 2;
+static const unsigned int num_record_channels = 1;
 
 typedef jlong jvm_pointer;
 
@@ -24,7 +25,7 @@ void *recover_pointer(jvm_pointer p);
 void throw_error(JNIEnv *env, jclass exc_class, const char *err_fmt, ...);
 
 void convert_stereo162monofloat(const int16_t *stereo_buf, float *mono_f,
-                                size_t num_frames);
+                                size_t num_frames, unsigned int num_channels);
 void convert_monofloat2stereoint16(const float *mono_f, int16_t *stereo_buf,
                                    size_t num_frames);
 typedef struct {
@@ -43,7 +44,7 @@ typedef struct {
     size_t num_buf;
     ptrdiff_t buf_idx;
     // buf_len is the number of frames in each buf
-    // number of samples is num_channels * buf_len
+    // number of samples is num_playback_channels * buf_len
     size_t num_frames;
     // scratch is a mono floating point buffer that we can give to
     // quiet_decoder_consume
@@ -63,7 +64,7 @@ typedef struct {
     size_t num_buf;
     ptrdiff_t buf_idx;
     // buf_len is the number of frames in each buf
-    // number of samples is num_channels * buf_len
+    // number of samples is num_record_channels * buf_len
     size_t num_frames;
     // scratch is a mono floating point buffer that we can give to
     // quiet_decoder_consume
