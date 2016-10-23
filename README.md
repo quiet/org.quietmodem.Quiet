@@ -38,6 +38,11 @@ Javascript: [quiet-js](https://github.com/quiet/quiet-js) (*UDP/TCP coming soon*
 
 iOS: *Coming Soon*
 
+Apps that use org.quietmodem.Quiet
+----------------------------------
+
+[Quiet Share](https://github.com/alexbirkett/QuietShare) - A proof of concept app that allows text and links to be shared from one device to another.
+
 Usage
 ===========
 
