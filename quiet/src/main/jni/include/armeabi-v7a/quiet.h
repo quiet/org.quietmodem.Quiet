@@ -1000,6 +1000,8 @@ unsigned int quiet_decoder_checksum_fails(const quiet_decoder *d);
  */
 const quiet_decoder_frame_stats *quiet_decoder_consume_stats(quiet_decoder *d, size_t *num_frames);
 
+const quiet_decoder_frame_stats *quiet_decoder_recv_stats(quiet_decoder *d);
+
 /* Enable stats collection
  * @d decoder object
  *
@@ -1021,6 +1023,9 @@ void quiet_decoder_enable_stats(quiet_decoder *d);
  */
 void quiet_decoder_disable_stats(quiet_decoder *d);
 
+void quiet_decoder_set_stats_blocking(quiet_decoder *d, time_t sec, long nano);
+
+void quiet_decoder_set_stats_nonblocking(quiet_decoder *d);
 /* Destroy decoder
  * @d decoder object
  *

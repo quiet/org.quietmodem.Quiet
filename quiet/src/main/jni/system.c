@@ -14,22 +14,30 @@ void throw_error(JNIEnv *env, jclass exc_class, const char *err_fmt, ...) {
     free(err_msg);
 }
 
-void convert_stereo162monofloat(const int16_t *stereo_buf, float *mono_f,
-                                size_t num_frames, unsigned int num_channels) {
+void convert_stereoopensl2monofloat(const opensl_sample_t *stereo_buf, float *mono_f,
+                                    size_t num_frames, unsigned int num_channels) {
     for (size_t i = 0; i < num_frames; i++) {
         // just skip every other sample e.g. ignore samples from right channel
+#ifdef QUIET_JNI_USE_FLOAT
+        mono_f[i] = stereo_buf[i * num_channels];
+#else
         mono_f[i] = stereo_buf[i * num_channels] / (float)(SHRT_MAX);
+#endif
     }
 }
 
-void convert_monofloat2stereoint16(const float *mono_f, int16_t *stereo_buf,
-                                   size_t num_frames) {
+void convert_monofloat2stereoopensl(const float *mono_f, opensl_sample_t *stereo_buf,
+                                    size_t num_frames) {
     for (size_t i = 0; i < num_frames; i++) {
         float temp = mono_f[i];
         temp = (temp > 1.0f) ? 1.0f : temp;
         temp = (temp < -1.0f) ? -1.0f : temp;
         // just skip every other sample e.g. leave the right channel empty
+#ifdef QUIET_JNI_USE_FLOAT
+        stereo_buf[i * num_playback_channels] = temp;
+#else
         stereo_buf[i * num_playback_channels] = temp * SHRT_MAX;
+#endif
     }
 }
 
@@ -167,6 +175,16 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     cache.decoder.klass = (jclass)((*env)->NewGlobalRef(env, localDecoderClass));
     (*env)->DeleteLocalRef(env, localDecoderClass);
 
+    jclass localComplexClass =
+        (*env)->FindClass(env, "org/quietmodem/Quiet/Complex");
+    cache.complex.klass = (jclass)((*env)->NewGlobalRef(env, localComplexClass));
+    (*env)->DeleteLocalRef(env, localComplexClass);
+
+    jclass localFrameStatsClass =
+        (*env)->FindClass(env, "org/quietmodem/Quiet/FrameStats");
+    cache.frame_stats.klass = (jclass)((*env)->NewGlobalRef(env, localFrameStatsClass));
+    (*env)->DeleteLocalRef(env, localFrameStatsClass);
+
     jclass localNetworkInterfaceConfClass = (*env)->FindClass(
         env, "org/quietmodem/Quiet/NetworkInterfaceConfig");
 
@@ -276,6 +294,12 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
     cache.decoder.ptr =
         (*env)->GetFieldID(env, cache.decoder.klass, "dec_ptr", "J");
+
+    cache.complex.ctor =
+        (*env)->GetMethodID(env, cache.complex.klass, "<init>", "(FF)V");
+
+    cache.frame_stats.ctor =
+        (*env)->GetMethodID(env, cache.frame_stats.klass, "<init>", "([Lorg/quietmodem/Quiet/Complex;FFZ)V");
 
     cache.network_interface_config.encoder_profile =
         (*env)->GetFieldID(env, cache.network_interface_config.klass, "transmitterConfig", "Lorg/quietmodem/Quiet/FrameTransmitterConfig;");

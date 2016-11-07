@@ -10,6 +10,11 @@ public abstract class BaseFrameReceiver {
     private native void nativeSetBlocking(long seconds, long nano);
     private native void nativeSetNonblocking();
     private native void nativeFree();
+    private native void nativeEnableStats();
+    private native void nativeDisableStats();
+    private native void nativeStatsSetBlocking(long seconds, long nano);
+    private native void nativeStatsSetNonblocking();
+    private native FrameStats nativeRecvStats() throws IOException;
 
     protected QuietSystem quietSystem;
     private long dec_ptr;
@@ -50,6 +55,12 @@ public abstract class BaseFrameReceiver {
     public void terminate(int urgency) {
         this.nativeTerminate(urgency);
     }
+
+    public void enableStats() { nativeEnableStats(); }
+    public void disableStats() { nativeDisableStats(); }
+    public void statsSetBlocking(long seconds, long nano) { nativeStatsSetBlocking(seconds, nano); }
+    public void statsSetNonblocking() { nativeStatsSetNonblocking(); }
+    public synchronized FrameStats receiveStats() throws IOException { return nativeRecvStats(); }
 
     @Override
     protected void finalize() {

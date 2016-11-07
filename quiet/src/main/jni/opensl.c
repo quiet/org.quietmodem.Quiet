@@ -67,11 +67,11 @@ quiet_opensl_producer *opensl_producer_create(size_t num_buf,
     quiet_opensl_producer *p = malloc(sizeof(quiet_opensl_producer));
     p->num_buf = num_buf;
     p->num_frames = num_frames;
-    p->buf = malloc(p->num_buf * sizeof(int16_t *));
+    p->buf = malloc(p->num_buf * sizeof(opensl_sample_t *));
     p->buf_idx = 0;
     p->scratch = malloc(p->num_frames * sizeof(quiet_sample_t));
     for (size_t i = 0; i < p->num_buf; i++) {
-        p->buf[i] = malloc(p->num_frames * num_playback_channels * sizeof(int16_t));
+        p->buf[i] = malloc(p->num_frames * num_playback_channels * sizeof(opensl_sample_t));
     }
     return p;
 }
@@ -90,11 +90,11 @@ quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
     quiet_opensl_consumer *c = malloc(sizeof(quiet_opensl_consumer));
     c->num_buf = num_buf;
     c->num_frames = num_frames;
-    c->buf = malloc(c->num_buf * sizeof(int16_t *));
+    c->buf = malloc(c->num_buf * sizeof(opensl_sample_t *));
     c->buf_idx = 0;
     c->scratch = malloc(c->num_frames * sizeof(quiet_sample_t));
     for (size_t i = 0; i < c->num_buf; i++) {
-        c->buf[i] = malloc(c->num_frames * num_record_channels * sizeof(int16_t));
+        c->buf[i] = malloc(c->num_frames * num_record_channels * sizeof(opensl_sample_t));
     }
     return c;
 }
@@ -138,10 +138,10 @@ void playback_callback(SLAndroidSimpleBufferQueueItf queueItf,
     for (size_t i = written; i < p->num_frames; i++) {
         p->scratch[i] = 0;
     }
-    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(int16_t);
+    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(opensl_sample_t);
     memset(p->buf[p->buf_idx], 0, num_bytes);
-    convert_monofloat2stereoint16(p->scratch, p->buf[p->buf_idx],
-                                  p->num_frames);
+    convert_monofloat2stereoopensl(p->scratch, p->buf[p->buf_idx],
+                                   p->num_frames);
 
     SLresult res;
     // Enqueue() expects the number of bytes, not frames or samples
@@ -164,12 +164,21 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     bufferQueue.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
     bufferQueue.numBuffers = p->num_buf;
 
+#ifdef QUIET_JNI_USE_FLOAT
+    SLAndroidDataFormat_PCM_EX pcm;
+    pcm.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
+    pcm.bitsPerSample = 32;
+    pcm.containerSize = 32;
+    pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
+    pcm.sampleRate = SL_SAMPLINGRATE_44_1;
+#else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
-    pcm.numChannels = 2;
-    pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
+    pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
+#endif
+    pcm.numChannels = 2;
     pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
     pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
@@ -186,7 +195,7 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     audioSink.pFormat = NULL;
 
     SLObjectItf player;
-    SLuint32 num_interfaces = 1;
+    SLuint32 num_interfaces = num_record_channels;
     SLboolean required[num_interfaces];
     SLInterfaceID interfaces[num_interfaces];
     interfaces[0] = SL_IID_ANDROIDSIMPLEBUFFERQUEUE;
@@ -275,11 +284,11 @@ void quiet_opensl_destroy_player(quiet_opensl_player *player) {
 void record_callback(SLAndroidSimpleBufferQueueItf queueItf, void *user_data) {
     quiet_opensl_recorder *recorder = (quiet_opensl_recorder *)user_data;
     quiet_opensl_consumer *c = (quiet_opensl_consumer *)recorder->consumer;
-    convert_stereo162monofloat(c->buf[c->buf_idx], c->scratch, c->num_frames, num_record_channels);
+    convert_stereoopensl2monofloat(c->buf[c->buf_idx], c->scratch, c->num_frames, num_record_channels);
     c->consume(c->consume_arg, c->scratch, c->num_frames);
 
     SLresult res;
-    size_t num_bytes = c->num_frames * num_record_channels * sizeof(int16_t);
+    size_t num_bytes = c->num_frames * num_record_channels * sizeof(opensl_sample_t);
     // Enqueue() expects the number of bytes, not frames or samples
     res = (*queueItf)->Enqueue(queueItf, c->buf[c->buf_idx], num_bytes);
     if (res != SL_RESULT_SUCCESS) {
@@ -310,13 +319,22 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     bufferQueue.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
     bufferQueue.numBuffers = c->num_buf;
 
+#ifdef QUIET_JNI_USE_FLOAT
+    SLAndroidDataFormat_PCM_EX pcm;
+    pcm.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
+    pcm.bitsPerSample = 32;
+    pcm.containerSize = 32;
+    pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
+    pcm.sampleRate = SL_SAMPLINGRATE_44_1;
+#else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
-    pcm.numChannels = 1;
-    pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.channelMask = SL_SPEAKER_FRONT_LEFT;
+    pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
+#endif
+    pcm.numChannels = num_record_channels;
+    pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
     pcm.endianness = SL_BYTEORDER_LITTLEENDIAN;
 
     SLDataSink audioSink;
@@ -366,7 +384,7 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
         return res;
     }
 
-    size_t num_bytes = c->num_buf * num_record_channels * sizeof(int16_t);
+    size_t num_bytes = c->num_buf * num_record_channels * sizeof(opensl_sample_t);
     for (size_t i = 0; i < c->num_buf; i++) {
         // Enqueue() expects the number of bytes, not frames or samples
         res = (*bufferQueueItf)

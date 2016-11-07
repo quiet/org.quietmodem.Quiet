@@ -16,7 +16,14 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "quiet", __VA_ARGS__)
 
 static const unsigned int num_playback_channels = 2;
-static const unsigned int num_record_channels = 1;
+static const unsigned int num_record_channels = 2;
+
+#if defined(SL_ANDROID_PCM_REPRESENTATION_FLOAT)
+#define QUIET_JNI_USE_FLOAT 1
+typedef float opensl_sample_t;
+#else
+typedef int16_t opensl_sample_t;
+#endif
 
 typedef jlong jvm_pointer;
 
@@ -24,10 +31,10 @@ jvm_pointer jvm_opaque_pointer(void *p);
 void *recover_pointer(jvm_pointer p);
 void throw_error(JNIEnv *env, jclass exc_class, const char *err_fmt, ...);
 
-void convert_stereo162monofloat(const int16_t *stereo_buf, float *mono_f,
-                                size_t num_frames, unsigned int num_channels);
-void convert_monofloat2stereoint16(const float *mono_f, int16_t *stereo_buf,
-                                   size_t num_frames);
+void convert_stereoopensl2monofloat(const opensl_sample_t *stereo_buf, float *mono_f,
+                                    size_t num_frames, unsigned int num_channels);
+void convert_monofloat2stereoopensl(const float *mono_f, opensl_sample_t *stereo_buf,
+                                    size_t num_frames);
 typedef struct {
     SLObjectItf engine;
     SLObjectItf output_mix;
@@ -38,7 +45,7 @@ SLresult quiet_opensl_system_create(quiet_opensl_system **opensl_sys_dest);
 void quiet_opensl_system_destroy(quiet_opensl_system *opensl_sys);
 
 typedef struct {
-    int16_t **buf;
+    opensl_sample_t **buf;
     // num_buf and buf_idx tell us how many buf there are and which we're about
     // to use
     size_t num_buf;
@@ -58,7 +65,7 @@ quiet_opensl_producer *opensl_producer_create(size_t num_buf,
 void opensl_producer_destroy(quiet_opensl_producer *p);
 
 typedef struct {
-    int16_t **buf;
+    opensl_sample_t **buf;
     // num_buf and buf_idx tell us how many buf there are and which we're about
     // to use
     size_t num_buf;
@@ -242,6 +249,16 @@ typedef struct {
 
 typedef struct {
     jclass klass;
+    jmethodID ctor;
+} java_complex_cache;
+
+typedef struct {
+    jclass klass;
+    jmethodID ctor;
+} java_frame_stats_cache;
+
+typedef struct {
+    jclass klass;
     jfieldID encoder_profile;
     jfieldID decoder_profile;
     jfieldID local_address;
@@ -290,6 +307,8 @@ typedef struct {
     java_decoder_profile_cache decoder_profile;
     java_encoder_cache encoder;
     java_decoder_cache decoder;
+    java_complex_cache complex;
+    java_frame_stats_cache frame_stats;
     java_network_interface_config_cache network_interface_config;
     java_network_interface_cache network_interface;
     java_datagram_cache datagram;

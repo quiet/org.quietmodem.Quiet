@@ -45,6 +45,9 @@
 #define LWIP_UNIX_ANDROID
 /* the next include defines __ANDROID_API__ */
 #include <android/api-level.h>
+#if __ANDROID_API__ >= 21
+#define SOCKLEN_T_DEFINED
+#endif
 #endif
 
 /* Include some files for defining library routines */

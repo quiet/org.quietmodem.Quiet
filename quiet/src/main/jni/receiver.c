@@ -152,3 +152,68 @@ JNIEXPORT void JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeSetNonb
     quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
     quiet_decoder_set_nonblocking(dec->dec);
 }
+
+JNIEXPORT void JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeEnableStats(
+        JNIEnv *env, jobject This) {
+    jvm_pointer j_dec = (*env)->GetLongField(env, This, cache.decoder.ptr);
+    quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
+    quiet_decoder_enable_stats(dec->dec);
+}
+
+JNIEXPORT void JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeDisableStats(
+        JNIEnv *env, jobject This) {
+    jvm_pointer j_dec = (*env)->GetLongField(env, This, cache.decoder.ptr);
+    quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
+    quiet_decoder_disable_stats(dec->dec);
+}
+
+JNIEXPORT void JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeStatsSetBlocking(
+        JNIEnv *env, jobject This, jlong seconds, jlong nano) {
+    jvm_pointer j_dec = (*env)->GetLongField(env, This, cache.decoder.ptr);
+    quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
+    quiet_decoder_set_stats_blocking(dec->dec, seconds, nano);
+}
+
+JNIEXPORT void JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeStatsSetNonblocking(
+        JNIEnv *env, jobject This) {
+    jvm_pointer j_dec = (*env)->GetLongField(env, This, cache.decoder.ptr);
+    quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
+    quiet_decoder_set_stats_nonblocking(dec->dec);
+}
+
+JNIEXPORT jobject JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_nativeRecvStats(
+        JNIEnv *env, jobject This) {
+    jvm_pointer j_dec = (*env)->GetLongField(env, This, cache.decoder.ptr);
+    quiet_android_decoder *dec = (quiet_android_decoder *)recover_pointer(j_dec);
+    const quiet_decoder_frame_stats *stats = quiet_decoder_recv_stats(dec->dec);
+
+    if (!stats) {
+        quiet_error err = quiet_get_last_error();
+        switch (err) {
+            case quiet_success:
+                throw_error(env, cache.java.eof_exception_klass, "EOF");
+                return NULL;
+            case quiet_would_block:
+                throw_error(env, cache.java.io_exception_klass, "Asynchronous operation would block");
+                return NULL;
+            case quiet_timedout:
+                throw_error(env, cache.java.socket_timeout_exception_klass, "Timed out");
+                return NULL;
+            default:
+                throw_error(env, cache.java.io_exception_klass, "Unspecified I/O Error %d", err);
+                return NULL;
+        }
+    }
+
+    jobject symbol_array = (*env)->NewObjectArray(env, stats->num_symbols, cache.complex.klass, NULL);
+
+    for (size_t i = 0; i < stats->num_symbols; i++) {
+        jobject symbol = (*env)->NewObject(env, cache.complex.klass, cache.complex.ctor, stats->symbols[i].real, stats->symbols[i].imaginary);
+        (*env)->SetObjectArrayElement(env, symbol_array, i, symbol);
+        (*env)->DeleteLocalRef(env, symbol);
+    }
+
+    jobject frame_stats = (*env)->NewObject(env, cache.frame_stats.klass, cache.frame_stats.ctor, symbol_array, stats->received_signal_strength_indicator, stats->error_vector_magnitude, stats->checksum_passed);
+
+    return frame_stats;
+}

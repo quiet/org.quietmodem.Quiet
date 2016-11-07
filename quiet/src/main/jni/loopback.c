@@ -108,7 +108,7 @@ void loopback_remove_consumer(quiet_loopback_system *loopback, quiet_opensl_cons
 
 static void loopback_sum_producer(quiet_loopback_system *l,
                                   quiet_opensl_producer *p,
-                                  int16_t *dest) {
+                                  opensl_sample_t *dest) {
     ssize_t written = p->produce(p->produce_arg, p->scratch, p->num_frames);
 
     if (written == 0) {
@@ -128,10 +128,10 @@ static void loopback_sum_producer(quiet_loopback_system *l,
     for (size_t i = written; i < p->num_frames; i++) {
         p->scratch[i] = 0;
     }
-    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(int16_t);
+    size_t num_bytes = p->num_frames * num_playback_channels * sizeof(opensl_sample_t);
     memset(p->buf[0], 0, num_bytes);
-    convert_monofloat2stereoint16(p->scratch, p->buf[0],
-                                  p->num_frames);
+    convert_monofloat2stereoopensl(p->scratch, p->buf[0],
+                                   p->num_frames);
     for (size_t i = 0; i < p->num_frames * num_playback_channels; i++) {
         dest[i] += p->buf[0][i];
     }
@@ -139,8 +139,8 @@ static void loopback_sum_producer(quiet_loopback_system *l,
 
 static void loopback_write_consumer(quiet_loopback_system *l,
                                     quiet_opensl_consumer *c,
-                                    int16_t *src) {
-    convert_stereo162monofloat(src, c->scratch, c->num_frames, num_playback_channels);
+                                    opensl_sample_t *src) {
+    convert_stereoopensl2monofloat(src, c->scratch, c->num_frames, num_playback_channels);
     c->consume(c->consume_arg, c->scratch, c->num_frames);
 }
 
@@ -148,9 +148,9 @@ static void *loopback_thread(void *args_v) {
     quiet_loopback_system *l = (quiet_loopback_system *)args_v;
     struct timeval now, last_now;
     gettimeofday(&last_now, NULL);
-    int16_t *sample_stereo_buffer = malloc(loopback_buffer_length * num_playback_channels * sizeof(int16_t));
+    opensl_sample_t *sample_stereo_buffer = malloc(loopback_buffer_length * num_playback_channels * sizeof(opensl_sample_t));
     while (true) {
-        memset(sample_stereo_buffer, 0, loopback_buffer_length * num_playback_channels * sizeof(int16_t));
+        memset(sample_stereo_buffer, 0, loopback_buffer_length * num_playback_channels * sizeof(opensl_sample_t));
         pthread_mutex_lock(&l->lock);
 
         if (l->is_closed) {
