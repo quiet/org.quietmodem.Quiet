@@ -18,8 +18,8 @@
 static const unsigned int num_playback_channels = 2;
 static const unsigned int num_record_channels = 2;
 
-#if defined(SL_ANDROID_PCM_REPRESENTATION_FLOAT)
-#define QUIET_JNI_USE_FLOAT 0
+#if 0 && defined(SL_ANDROID_PCM_REPRESENTATION_FLOAT)
+#define QUIET_JNI_USE_FLOAT 1
 typedef float opensl_sample_t;
 #else
 typedef int16_t opensl_sample_t;
