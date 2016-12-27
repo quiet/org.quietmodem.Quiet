@@ -88,9 +88,9 @@ This sets up our transmitter and receiver using the packaged configuration. We c
 
 On one side we might run
 ```
-// set receiver to block for at most 1 second
+// set receiver to block until a frame is received
 // by default receivers are nonblocking
-receiver.setBlocking(1, 0);
+receiver.setBlocking(0, 0);
 
 byte[] buf = new byte[1024];
 long recvLen = 0;
