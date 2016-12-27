@@ -1,6 +1,6 @@
 org.quietmodem.Quiet
 ===========
-[![Analytics](https://quiet-ga.appspot.com/UA-89475295-2/welcome-page)](https://github.com/igrigorik/ga-beacon)
+[![Analytics](https://quiet-ga.appspot.com/UA-89475295-2/org.quietmodem.Quiet)](https://github.com/igrigorik/ga-beacon)
 
 org.quietmodem.Quiet allows you to pass data through the speakers on your Android device. This library can operate either as a raw frame layer or as a UDP/TCP stack.
 
