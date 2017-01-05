@@ -355,6 +355,14 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     }
     recorder_deref->recorder = recorder;
 
+    SLAndroidConfigurationItf configItf;
+    res = (*recorder)->GetInterface(recorder, SL_IID_ANDROIDCONFIGURATION, (void *)&configItf);
+    if (res == SL_RESULT_SUCCESS) {
+        SLuint32 preset = SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION;
+        (*configItf)->SetConfiguration(configItf, SL_ANDROID_KEY_RECORDING_PRESET,
+                                     &preset, sizeof(preset));
+    }
+
     res = (*recorder)->Realize(recorder, SL_BOOLEAN_FALSE);
     if (res != SL_RESULT_SUCCESS) {
         return res;
