@@ -36,7 +36,7 @@ Desktop/Laptop: [libquiet](https://github.com/quiet/quiet) and [quiet-lwip](http
 
 Javascript: [quiet-js](https://github.com/quiet/quiet-js) (*UDP/TCP coming soon*)
 
-iOS: *Coming Soon*
+iOS: [QuietModemKit](https://github.com/quiet/QuietModemKit)
 
 Apps that use org.quietmodem.Quiet
 ----------------------------------
