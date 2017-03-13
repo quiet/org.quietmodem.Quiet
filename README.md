@@ -1,6 +1,8 @@
 org.quietmodem.Quiet
 ===========
 
+[![Quiet Modem Chat](https://discordapp.com/api/guilds/290985648054206464/embed.png?style=shield)](https://discordapp.com/invite/TMKfR)
+
 org.quietmodem.Quiet allows you to pass data through the speakers on your Android device. This library can operate either as a raw frame layer or as a UDP/TCP stack.
 
 This package contains prebuilt library files for [libquiet](https://github.com/quiet/quiet) and [quiet-lwip](https://github.com/quiet/quiet-lwip) as well as their dependencies. On top of that, it adds Java bindings which closely mimic the familiar interfaces from the java.net.* package.
