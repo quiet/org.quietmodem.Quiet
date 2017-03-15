@@ -1,7 +1,7 @@
 org.quietmodem.Quiet
 ===========
 
-[![Quiet Modem Chat](https://discordapp.com/api/guilds/290985648054206464/embed.png?style=shield)](https://discordapp.com/invite/TMKfR)
+[![Quiet Modem Chat](https://discordapp.com/api/guilds/290985648054206464/embed.png?style=shield)](https://discordapp.com/invite/eRw5UjF)
 
 org.quietmodem.Quiet allows you to pass data through the speakers on your Android device. This library can operate either as a raw frame layer or as a UDP/TCP stack.
 
