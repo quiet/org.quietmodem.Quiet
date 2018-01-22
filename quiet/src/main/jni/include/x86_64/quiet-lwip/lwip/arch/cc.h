@@ -47,7 +47,6 @@
 #include <android/api-level.h>
 #define SOCKLEN_T_DEFINED
 #endif
-#endif
 
 /* Include some files for defining library routines */
 #include <string.h>
