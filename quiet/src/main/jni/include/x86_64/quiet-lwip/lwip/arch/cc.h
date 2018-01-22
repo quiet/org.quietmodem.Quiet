@@ -45,7 +45,6 @@
 #define LWIP_UNIX_ANDROID
 /* the next include defines __ANDROID_API__ */
 #include <android/api-level.h>
-#if __ANDROID_API__ >= 21
 #define SOCKLEN_T_DEFINED
 #endif
 #endif
@@ -109,10 +108,6 @@ typedef uintptr_t  mem_ptr_t;
 #endif
 
 #define LWIP_RAND() ((u32_t)rand())
-
-#if defined(LWIP_UNIX_ANDROID) && defined(FD_SET)
-    typedef __kernel_fd_set fd_set;
-#endif
 
 struct sio_status_s;
 typedef struct sio_status_s sio_status_t;
