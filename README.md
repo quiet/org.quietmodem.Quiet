@@ -56,7 +56,7 @@ Frame Mode
 ---------------
 Assuming we're working from MainActivity.java, we start with
 
-```
+```java
 import java.io.IOException;
 import org.quietmodem.Quiet.*;
 
@@ -89,7 +89,7 @@ try {
 This sets up our transmitter and receiver using the packaged configuration. We choose the audible mode here. Now we can transmit.
 
 On one side we might run
-```
+```java
 // set receiver to block until a frame is received
 // by default receivers are nonblocking
 receiver.setBlocking(0, 0);
@@ -104,7 +104,7 @@ try {
 ```
 
 And on the other side
-```
+```java
 String payload = "Hello, World!";
 try {
     transmitter.send(payload.getBytes());
@@ -120,7 +120,7 @@ UDP/TCP Mode
 If we want to do interactions between two devices, or if we'd like retransmits and automatic data segmentation, then TCP is the way to go.
 
 First we build a new NetworkInterface.
-```
+```java
 import java.io.IOException;
 import java.net.SocketException;
 import org.quietmodem.Quiet.*;
@@ -157,7 +157,7 @@ If we're using Quiet in an ad-hoc manner, we'll need to discover any peers nearb
 
 On each side we might run something like this.
 
-```
+```java
 // org.quietmodem.Quiet.DatagramSocket
 DatagramSocket s = null;
 try {
