@@ -27,6 +27,8 @@ What does it sound like?
 ---------------
 The answer to this depends on which operating mode you choose. Quiet provides audible and near-ultrasonic modes. Audible modes sound something like a puff of air. The near-ultrasonic modes run at 17+kHz and are virtually inaudible to adults. Either mode can operate at relatively low volumes as long as there isn't too much background noise.
 
+But don't take my word for it, [try it out for yourself](https://quiet.github.io/quiet-js).
+
 How fast does it go?
 ---------------
 Quiet's provided audible mode transfers at approximately 7kbps. In cases where two devices are connected over a cable (via 3.5mm jack) it can run in cable mode, which transfers at approximately 64kbps.
