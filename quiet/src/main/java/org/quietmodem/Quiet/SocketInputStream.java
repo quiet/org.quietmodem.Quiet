@@ -6,7 +6,7 @@ import java.io.InputStream;
 public class SocketInputStream extends InputStream {
     private native int nativeAvailable() throws IOException;
     private native void nativeClose() throws IOException;
-    private native int nativeRead(byte[] buf, int off, int len) throws IOException;
+    private native int nativeRead(byte[] buf, long off, long len) throws IOException;
 
     private int fd;
 
