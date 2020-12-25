@@ -3,7 +3,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 30
     buildToolsVersion "26.0.2"
 
     defaultConfig {
@@ -33,10 +33,10 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support:support-annotations:23.0.0'
-    androidTestCompile 'com.android.support.test:rules:0.5'
-    androidTestCompile 'com.android.support.test:runner:0.5'
-    compile 'com.android.support:appcompat-v7:23.1.1'
+    androidTestCompile 'com.android.support:support-annotations:28.0.0'
+    androidTestCompile 'com.android.support.test:rules:1.0.2'
+    androidTestCompile 'com.android.support.test:runner:1.0.2'
+    compile 'com.android.support:appcompat-v7:23.4.0'
 }
 
 def getNdkDir() {
