@@ -1,7 +1,7 @@
 package org.quietmodem.Quiet;
 
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import android.test.suitebuilder.annotation.MediumTest;
 
 import org.junit.AfterClass;
@@ -13,8 +13,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
 import java.util.Arrays;
 
 @RunWith(AndroidJUnit4.class)
