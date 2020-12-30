@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -45,7 +45,7 @@ def getNdkDir() {
 
     Properties properties = new Properties()
     properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def ndkdir = 'C:\\MyAndroidSDK\\ndk-bundle' //properties.getProperty('ndk.dir', null)
+    def ndkdir = properties.getProperty('ndk.dir', null)
     if (ndkdir == null)
         throw new FileNotFoundException("NDK location not found. Define location with ndk.dir in the local.properties file or with an ANDROID_NDK_ROOT environment variable.")
 
