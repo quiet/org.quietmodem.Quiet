@@ -50,7 +50,7 @@ quiet_android_encoder *android_encoder_create(JNIEnv *env, const quiet_encoder_o
                                               quiet_android_system *sys, bool is_loopback,
                                               size_t num_bufs, size_t buf_len) {
     quiet_android_encoder *e = calloc(1, sizeof(quiet_android_encoder));
-    e->enc = quiet_encoder_create(opt, 44100);
+    e->enc = quiet_encoder_create(opt, 48000);
     if (!e->enc) {
         android_encoder_destroy(e);
         throw_error(env, cache.system.init_exc_klass, encoder_error_format, quiet_get_last_error());
