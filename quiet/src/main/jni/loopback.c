@@ -3,8 +3,8 @@
 // TODO fix include mess so we can include unistd.h
 extern int usleep(useconds_t);
 
-const int loopback_sample_rate = 44100;
-const int loopback_sleep = 23220;  // in microseconds
+const int loopback_sample_rate = 48000;
+const int loopback_sleep = 21333;  // in microseconds
 const int loopback_buffer_length = 1024;
 
 quiet_loopback_system *loopback_create() {

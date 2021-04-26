@@ -34,7 +34,7 @@ quiet_android_decoder *android_decoder_create(JNIEnv *env, const quiet_decoder_o
                                               quiet_android_system *sys, bool is_loopback,
                                               size_t num_bufs, size_t buf_len) {
     quiet_android_decoder *d = calloc(1, sizeof(quiet_android_decoder));
-    d->dec = quiet_decoder_create(opt, 44100);
+    d->dec = quiet_decoder_create(opt, 48000);
     if (!d->dec) {
         android_decoder_destroy(d);
         throw_error(env, cache.system.init_exc_klass, decoder_error_format, quiet_get_last_error());
