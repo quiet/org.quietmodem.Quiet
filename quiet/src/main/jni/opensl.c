@@ -342,18 +342,26 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     audioSink.pFormat = (void *)&pcm;
 
     SLObjectItf recorder;
-    unsigned int num_interfaces = 1;
+    unsigned int num_interfaces = 2;
     SLInterfaceID interfaces[num_interfaces];
     SLboolean required[num_interfaces];
     interfaces[0] = SL_IID_ANDROIDSIMPLEBUFFERQUEUE;
+    interfaces[1] = SL_IID_ANDROIDCONFIGURATION;
     required[0] = SL_BOOLEAN_TRUE;
+    required[1] = SL_BOOLEAN_FALSE;
     res = (*sys->engine_itf)
               ->CreateAudioRecorder(sys->engine_itf, &recorder, &audioSource,
-                                    &audioSink, 1, interfaces, required);
+                                    &audioSink, 2, interfaces, required);
     if (res != SL_RESULT_SUCCESS) {
         return res;
     }
     recorder_deref->recorder = recorder;
+
+    SLAndroidConfigurationItf inputConfiguration;
+    if ((*recorder)->GetInterface(recorder, SL_IID_ANDROIDCONFIGURATION, &inputConfiguration) == SL_RESULT_SUCCESS) {
+        SLuint32 presetValue = SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION;
+        (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_RECORDING_PRESET, &presetValue, sizeof(SLuint32));
+    }
 
     res = (*recorder)->Realize(recorder, SL_BOOLEAN_FALSE);
     if (res != SL_RESULT_SUCCESS) {
