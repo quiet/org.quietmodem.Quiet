@@ -45,6 +45,9 @@ SLresult quiet_opensl_system_create(quiet_opensl_system **sys_dest) {
         return res;
     }
 
+    sys_deref->playback_sample_rate = 44100;
+    sys_deref->recording_sample_rate = 44100;
+
     return SL_RESULT_SUCCESS;
 }
 
@@ -170,13 +173,13 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     pcm.bitsPerSample = 32;
     pcm.containerSize = 32;
     pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
-    pcm.sampleRate = SL_SAMPLINGRATE_48;
+    pcm.samplesPerSec = sys->playback_sample_rate * 1000;
 #else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.samplesPerSec = SL_SAMPLINGRATE_48;
+    pcm.samplesPerSec = sys->playback_sample_rate * 1000;
 #endif
     pcm.numChannels = 2;
     pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
@@ -325,13 +328,13 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     pcm.bitsPerSample = 32;
     pcm.containerSize = 32;
     pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
-    pcm.sampleRate = SL_SAMPLINGRATE_48;
+    pcm.samplesPerSec = sys->recording_sample_rate * 1000;
 #else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.samplesPerSec = SL_SAMPLINGRATE_48;
+    pcm.samplesPerSec = sys->recording_sample_rate * 1000;
 #endif
     pcm.numChannels = num_record_channels;
     pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;

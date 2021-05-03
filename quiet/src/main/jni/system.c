@@ -28,6 +28,11 @@ void convert_stereoopensl2monofloat(const opensl_sample_t *stereo_buf, float *mo
 
 void convert_monofloat2stereoopensl(const float *mono_f, opensl_sample_t *stereo_buf,
                                     size_t num_frames) {
+#ifdef QUIET_JNI_USE_FLOAT
+    memset(stereo_buf, 0, num_frames * sizeof(float) * num_playback_channels);
+#else
+    memset(stereo_buf, 0, num_frames * sizeof(uint16_t) * num_playback_channels);
+#endif
     for (size_t i = 0; i < num_frames; i++) {
         float temp = mono_f[i];
         temp = (temp > 1.0f) ? 1.0f : temp;

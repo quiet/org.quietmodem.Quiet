@@ -141,14 +141,22 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
     jobject j_enc_profile = (*env)->GetObjectField(env, j_conf, cache.network_interface_config.encoder_profile);
     jvm_pointer j_enc_profile_ptr = (*env)->GetLongField(env, j_enc_profile, cache.encoder_profile.ptr);
     conf->encoder_opt = (quiet_encoder_options *)recover_pointer(j_enc_profile_ptr);
-    conf->encoder_rate = 48000;
+    if (is_loopback) {
+        conf->encoder_rate = loopback_sample_rate;
+    } else {
+        conf->encoder_rate = sys->opensl_sys->playback_sample_rate;
+    }
     size_t encoder_num_bufs = (*env)->GetLongField(env, j_enc_profile, cache.encoder_profile.num_bufs);
     size_t encoder_buf_len = (*env)->GetLongField(env, j_enc_profile, cache.encoder_profile.buf_len);
 
     jobject j_dec_profile = (*env)->GetObjectField(env, j_conf, cache.network_interface_config.decoder_profile);
     jvm_pointer j_dec_profile_ptr = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.ptr);
     conf->decoder_opt = (quiet_decoder_options *)recover_pointer(j_dec_profile_ptr);
-    conf->decoder_rate = 48000;
+    if (is_loopback) {
+        conf->decoder_rate = loopback_sample_rate;
+    } else {
+        conf->decoder_rate = sys->opensl_sys->recording_sample_rate;
+    }
     size_t decoder_num_bufs = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.num_bufs);
     size_t decoder_buf_len = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.buf_len);
 

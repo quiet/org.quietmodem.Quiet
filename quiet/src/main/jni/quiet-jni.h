@@ -39,6 +39,8 @@ typedef struct {
     SLObjectItf engine;
     SLObjectItf output_mix;
     SLEngineItf engine_itf;
+    SLuint32 playback_sample_rate;
+    SLuint32 recording_sample_rate;
 } quiet_opensl_system;
 
 SLresult quiet_opensl_system_create(quiet_opensl_system **opensl_sys_dest);
