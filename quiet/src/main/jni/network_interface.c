@@ -72,8 +72,10 @@ quiet_lwip_android *lwip_android_create(JNIEnv *env, quiet_lwip_driver_config *c
                                         bool is_loopback,
                                         size_t encoder_num_bufs,
                                         size_t encoder_buf_len,
+                                        int encoder_sample_rate,
                                         size_t decoder_num_bufs,
-                                        size_t decoder_buf_len) {
+                                        size_t decoder_buf_len,
+                                        int decoder_sample_rate) {
     quiet_lwip_android *e = malloc(sizeof(quiet_lwip_android));
     e->interface = quiet_lwip_create(conf, local_address, netmask, gateway);
     if (!e->interface) {
@@ -86,15 +88,17 @@ quiet_lwip_android *lwip_android_create(JNIEnv *env, quiet_lwip_driver_config *c
         // ignore user-supplied buffer length values for loopback
         encoder_num_bufs = 1;
         encoder_buf_len = loopback_buffer_length;
+        encoder_sample_rate = loopback_sample_rate;
         decoder_num_bufs = 1;
         decoder_buf_len = loopback_buffer_length;
+        decoder_sample_rate = loopback_sample_rate;
     }
 
-    e->producer = opensl_producer_create(encoder_num_bufs, encoder_buf_len);
+    e->producer = opensl_producer_create(encoder_num_bufs, encoder_buf_len, encoder_sample_rate);
     e->producer->produce = quiet_lwip_get_next_audio_packet;
     e->producer->produce_arg = e->interface;
 
-    e->consumer = opensl_consumer_create(decoder_num_bufs, decoder_buf_len);
+    e->consumer = opensl_consumer_create(decoder_num_bufs, decoder_buf_len, decoder_sample_rate);
     e->consumer->consume = quiet_lwip_recv_audio_packet;
     e->consumer->consume_arg = e->interface;
 
@@ -144,7 +148,7 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
     if (is_loopback) {
         conf->encoder_rate = loopback_sample_rate;
     } else {
-        conf->encoder_rate = sys->opensl_sys->playback_sample_rate;
+        conf->encoder_rate = (*env)->GetIntField(env, j_enc_profile, cache.encoder_profile.sample_rate);
     }
     size_t encoder_num_bufs = (*env)->GetLongField(env, j_enc_profile, cache.encoder_profile.num_bufs);
     size_t encoder_buf_len = (*env)->GetLongField(env, j_enc_profile, cache.encoder_profile.buf_len);
@@ -155,7 +159,7 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
     if (is_loopback) {
         conf->decoder_rate = loopback_sample_rate;
     } else {
-        conf->decoder_rate = sys->opensl_sys->recording_sample_rate;
+        conf->decoder_rate = (*env)->GetIntField(env, j_dec_profile, cache.decoder_profile.sample_rate);
     }
     size_t decoder_num_bufs = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.num_bufs);
     size_t decoder_buf_len = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.buf_len);
@@ -182,7 +186,8 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
     uint8_t *addr_bytes = (uint8_t *)&local_addr;
 
     l = lwip_android_create(env, conf, local_addr, netmask, gateway, sys, is_loopback,
-                            encoder_num_bufs, encoder_buf_len, decoder_num_bufs, decoder_buf_len);
+                            encoder_num_bufs, encoder_buf_len, conf->encoder_rate,
+                            decoder_num_bufs, decoder_buf_len, conf->decoder_rate);
 
     // l could be NULL and we may have exception thrown -- lwip_android_create handles this
 

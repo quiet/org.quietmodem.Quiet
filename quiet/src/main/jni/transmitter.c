@@ -48,15 +48,12 @@ void android_encoder_terminate(quiet_android_encoder *enc, int urgency) {
 
 quiet_android_encoder *android_encoder_create(JNIEnv *env, const quiet_encoder_options *opt,
                                               quiet_android_system *sys, bool is_loopback,
-                                              size_t num_bufs, size_t buf_len) {
-    int sample_rate;
+                                              size_t num_bufs, size_t buf_len, int sample_rate) {
     if (is_loopback) {
         // ignore user-supplied buffer lengths for loopback
         num_bufs = 1;
         buf_len = loopback_buffer_length;
         sample_rate = loopback_sample_rate;
-    } else {
-        sample_rate = sys->opensl_sys->playback_sample_rate;
     }
     quiet_android_encoder *e = calloc(1, sizeof(quiet_android_encoder));
     e->enc = quiet_encoder_create(opt, sample_rate);
@@ -65,7 +62,7 @@ quiet_android_encoder *android_encoder_create(JNIEnv *env, const quiet_encoder_o
         throw_error(env, cache.system.init_exc_klass, encoder_error_format, quiet_get_last_error());
         return NULL;
     }
-    e->producer = opensl_producer_create(num_bufs, buf_len);
+    e->producer = opensl_producer_create(num_bufs, buf_len, sample_rate);
     e->producer->produce = quiet_android_playback_callback;
     e->producer->produce_arg = e->enc;
     e->is_loopback = is_loopback;
@@ -92,8 +89,9 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseFrameTransmitter_nat
     quiet_encoder_options *opt = (quiet_encoder_options *)recover_pointer(j_profile);
     size_t num_bufs = (*env)->GetLongField(env, conf, cache.encoder_profile.num_bufs);
     size_t buf_len = (*env)->GetLongField(env, conf, cache.encoder_profile.buf_len);
+    int sample_rate = (*env)->GetIntField(env, conf, cache.encoder_profile.sample_rate);
 
-    quiet_android_encoder *enc = android_encoder_create(env, opt, sys, is_loopback, num_bufs, buf_len);
+    quiet_android_encoder *enc = android_encoder_create(env, opt, sys, is_loopback, num_bufs, buf_len, sample_rate);
 
     return jvm_opaque_pointer(enc);
 }

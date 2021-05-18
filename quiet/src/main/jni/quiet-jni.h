@@ -39,8 +39,6 @@ typedef struct {
     SLObjectItf engine;
     SLObjectItf output_mix;
     SLEngineItf engine_itf;
-    SLuint32 playback_sample_rate;
-    SLuint32 recording_sample_rate;
 } quiet_opensl_system;
 
 SLresult quiet_opensl_system_create(quiet_opensl_system **opensl_sys_dest);
@@ -55,6 +53,7 @@ typedef struct {
     // buf_len is the number of frames in each buf
     // number of samples is num_playback_channels * buf_len
     size_t num_frames;
+    int sample_rate;
     // scratch is a mono floating point buffer that we can give to
     // quiet_decoder_consume
     float *scratch;
@@ -63,7 +62,8 @@ typedef struct {
 } quiet_opensl_producer;
 
 quiet_opensl_producer *opensl_producer_create(size_t num_buf,
-                                              size_t num_frames);
+                                              size_t num_frames,
+                                              int sample_rate);
 void opensl_producer_destroy(quiet_opensl_producer *p);
 
 typedef struct {
@@ -75,6 +75,7 @@ typedef struct {
     // buf_len is the number of frames in each buf
     // number of samples is num_record_channels * buf_len
     size_t num_frames;
+    int sample_rate;
     // scratch is a mono floating point buffer that we can give to
     // quiet_decoder_consume
     float *scratch;
@@ -83,7 +84,8 @@ typedef struct {
 } quiet_opensl_consumer;
 
 quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
-                                              size_t num_frames);
+                                              size_t num_frames,
+                                              int sample_rate);
 void opensl_consumer_destroy(quiet_opensl_consumer *c);
 
 typedef struct {
@@ -118,7 +120,6 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
 SLresult quiet_opensl_stop_recorder(quiet_opensl_recorder *recorder);
 void quiet_opensl_destroy_recorder(quiet_opensl_recorder *recorder);
 
-// n.b (1024 samples) / (23220 microseconds) ~= 44100 samples/second
 extern const int loopback_sample_rate;
 extern const int loopback_sleep;
 extern const int loopback_buffer_length;
@@ -230,6 +231,7 @@ typedef struct {
     jfieldID ptr;
     jfieldID num_bufs;
     jfieldID buf_len;
+    jfieldID sample_rate;
 } java_encoder_profile_cache;
 
 typedef struct {
@@ -237,6 +239,7 @@ typedef struct {
     jfieldID ptr;
     jfieldID num_bufs;
     jfieldID buf_len;
+    jfieldID sample_rate;
 } java_decoder_profile_cache;
 
 typedef struct {

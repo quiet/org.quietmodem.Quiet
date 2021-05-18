@@ -285,6 +285,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     cache.encoder_profile.buf_len =
         (*env)->GetFieldID(env, cache.encoder_profile.klass, "bufferLength", "J");
 
+    cache.encoder_profile.sample_rate =
+        (*env)->GetFieldID(env, cache.encoder_profile.klass, "sampleRate", "I");
+
     cache.decoder_profile.ptr =
         (*env)->GetFieldID(env, cache.decoder_profile.klass, "profile_ptr", "J");
 
@@ -293,6 +296,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
     cache.decoder_profile.buf_len =
         (*env)->GetFieldID(env, cache.decoder_profile.klass, "bufferLength", "J");
+
+    cache.decoder_profile.sample_rate =
+        (*env)->GetFieldID(env, cache.decoder_profile.klass, "sampleRate", "I");
 
     cache.encoder.ptr =
         (*env)->GetFieldID(env, cache.encoder.klass, "enc_ptr", "J");

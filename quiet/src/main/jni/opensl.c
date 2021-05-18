@@ -45,9 +45,6 @@ SLresult quiet_opensl_system_create(quiet_opensl_system **sys_dest) {
         return res;
     }
 
-    sys_deref->playback_sample_rate = 44100;
-    sys_deref->recording_sample_rate = 44100;
-
     return SL_RESULT_SUCCESS;
 }
 
@@ -66,10 +63,12 @@ void quiet_opensl_system_destroy(quiet_opensl_system *sys) {
 }
 
 quiet_opensl_producer *opensl_producer_create(size_t num_buf,
-                                              size_t num_frames) {
+                                              size_t num_frames,
+                                              int sample_rate) {
     quiet_opensl_producer *p = malloc(sizeof(quiet_opensl_producer));
     p->num_buf = num_buf;
     p->num_frames = num_frames;
+    p->sample_rate = sample_rate;
     p->buf = malloc(p->num_buf * sizeof(opensl_sample_t *));
     p->buf_idx = 0;
     p->scratch = malloc(p->num_frames * sizeof(quiet_sample_t));
@@ -89,10 +88,12 @@ void opensl_producer_destroy(quiet_opensl_producer *p) {
 }
 
 quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
-                                              size_t num_frames) {
+                                              size_t num_frames,
+                                              int sample_rate) {
     quiet_opensl_consumer *c = malloc(sizeof(quiet_opensl_consumer));
     c->num_buf = num_buf;
     c->num_frames = num_frames;
+    c->sample_rate = sample_rate;
     c->buf = malloc(c->num_buf * sizeof(opensl_sample_t *));
     c->buf_idx = 0;
     c->scratch = malloc(c->num_frames * sizeof(quiet_sample_t));
@@ -167,19 +168,20 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     bufferQueue.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
     bufferQueue.numBuffers = p->num_buf;
 
+    printf("sample rate %d\n", p->sample_rate);
 #ifdef QUIET_JNI_USE_FLOAT
     SLAndroidDataFormat_PCM_EX pcm;
     pcm.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
     pcm.bitsPerSample = 32;
     pcm.containerSize = 32;
     pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
-    pcm.samplesPerSec = sys->playback_sample_rate * 1000;
+    pcm.samplesPerSec = p->sample_rate * 1000;
 #else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.samplesPerSec = sys->playback_sample_rate * 1000;
+    pcm.samplesPerSec = p->sample_rate * 1000;
 #endif
     pcm.numChannels = 2;
     pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
@@ -198,18 +200,26 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     audioSink.pFormat = NULL;
 
     SLObjectItf player;
-    SLuint32 num_interfaces = num_record_channels;
+    SLuint32 num_interfaces = 2;
     SLboolean required[num_interfaces];
     SLInterfaceID interfaces[num_interfaces];
     interfaces[0] = SL_IID_ANDROIDSIMPLEBUFFERQUEUE;
+    interfaces[1] = SL_IID_ANDROIDCONFIGURATION;
     required[0] = SL_BOOLEAN_TRUE;
+    required[1] = SL_BOOLEAN_FALSE;
     res = (*sys->engine_itf)
               ->CreateAudioPlayer(sys->engine_itf, &player, &audioSource,
-                                  &audioSink, 1, interfaces, required);
+                                  &audioSink, 2, interfaces, required);
     if (res != SL_RESULT_SUCCESS) {
         return res;
     }
     player_deref->player = player;
+
+    SLAndroidConfigurationItf inputConfiguration;
+    if ((*player)->GetInterface(player, SL_IID_ANDROIDCONFIGURATION, &inputConfiguration) == SL_RESULT_SUCCESS) {
+        SLuint32 performanceValue = SL_ANDROID_PERFORMANCE_NONE;
+        (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_PERFORMANCE_MODE, &performanceValue, sizeof(SLuint32));
+    }
 
     res = (*player)->Realize(player, SL_BOOLEAN_FALSE);
     if (res != SL_RESULT_SUCCESS) {
@@ -328,13 +338,13 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     pcm.bitsPerSample = 32;
     pcm.containerSize = 32;
     pcm.representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
-    pcm.samplesPerSec = sys->recording_sample_rate * 1000;
+    pcm.samplesPerSec = c->sample_rate * 1000;
 #else
     SLDataFormat_PCM pcm;
     pcm.formatType = SL_DATAFORMAT_PCM;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
     pcm.containerSize = 16;
-    pcm.samplesPerSec = sys->recording_sample_rate * 1000;
+    pcm.samplesPerSec = c->sample_rate * 1000;
 #endif
     pcm.numChannels = num_record_channels;
     pcm.channelMask = SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
@@ -363,7 +373,9 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
     SLAndroidConfigurationItf inputConfiguration;
     if ((*recorder)->GetInterface(recorder, SL_IID_ANDROIDCONFIGURATION, &inputConfiguration) == SL_RESULT_SUCCESS) {
         SLuint32 presetValue = SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION;
+        SLuint32 performanceValue = SL_ANDROID_PERFORMANCE_NONE;
         (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_RECORDING_PRESET, &presetValue, sizeof(SLuint32));
+        (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_PERFORMANCE_MODE, &performanceValue, sizeof(SLuint32));
     }
 
     res = (*recorder)->Realize(recorder, SL_BOOLEAN_FALSE);
