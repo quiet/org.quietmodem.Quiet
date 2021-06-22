@@ -1,5 +1,18 @@
 #include "quiet-jni.h"
 
+typedef enum {
+    AUDIO_SOURCE_DEFAULT             = 0,
+    AUDIO_SOURCE_MIC                 = 1,
+    AUDIO_SOURCE_VOICE_UPLINK        = 2,
+    AUDIO_SOURCE_VOICE_DOWNLINK      = 3,
+    AUDIO_SOURCE_VOICE_CALL          = 4,
+    AUDIO_SOURCE_CAMCORDER           = 5,
+    AUDIO_SOURCE_VOICE_RECOGNITION   = 6,
+    AUDIO_SOURCE_VOICE_COMMUNICATION = 7,
+    AUDIO_SOURCE_CNT,
+    AUDIO_SOURCE_MAX                 = AUDIO_SOURCE_CNT - 1,
+} audio_source_t;
+
 SLresult quiet_opensl_system_create(quiet_opensl_system **sys_dest) {
     *sys_dest = calloc(1, sizeof(quiet_opensl_system));
     quiet_opensl_system *sys_deref = *sys_dest;
@@ -89,11 +102,13 @@ void opensl_producer_destroy(quiet_opensl_producer *p) {
 
 quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
                                               size_t num_frames,
-                                              int sample_rate) {
+                                              int sample_rate,
+                                              int recording_preset) {
     quiet_opensl_consumer *c = malloc(sizeof(quiet_opensl_consumer));
     c->num_buf = num_buf;
     c->num_frames = num_frames;
     c->sample_rate = sample_rate;
+    c->recording_preset = recording_preset;
     c->buf = malloc(c->num_buf * sizeof(opensl_sample_t *));
     c->buf_idx = 0;
     c->scratch = malloc(c->num_frames * sizeof(quiet_sample_t));
@@ -168,7 +183,6 @@ SLresult quiet_opensl_create_player(quiet_opensl_system *sys,
     bufferQueue.locatorType = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
     bufferQueue.numBuffers = p->num_buf;
 
-    printf("sample rate %d\n", p->sample_rate);
 #ifdef QUIET_JNI_USE_FLOAT
     SLAndroidDataFormat_PCM_EX pcm;
     pcm.formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
@@ -372,7 +386,18 @@ SLresult quiet_opensl_create_recorder(quiet_opensl_system *sys,
 
     SLAndroidConfigurationItf inputConfiguration;
     if ((*recorder)->GetInterface(recorder, SL_IID_ANDROIDCONFIGURATION, &inputConfiguration) == SL_RESULT_SUCCESS) {
-        SLuint32 presetValue = SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION;
+        SLuint32 presetValue;
+        if (c->recording_preset == AUDIO_SOURCE_MIC) {
+            presetValue = SL_ANDROID_RECORDING_PRESET_GENERIC;
+        } else if (c->recording_preset == AUDIO_SOURCE_VOICE_RECOGNITION) {
+            presetValue = SL_ANDROID_RECORDING_PRESET_VOICE_RECOGNITION;
+        } else if (c->recording_preset == AUDIO_SOURCE_CAMCORDER) {
+            presetValue = SL_ANDROID_RECORDING_PRESET_CAMCORDER;
+        } else if (c->recording_preset == AUDIO_SOURCE_VOICE_COMMUNICATION) {
+            presetValue = SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION;
+        } else {
+            presetValue = SL_ANDROID_RECORDING_PRESET_NONE;
+        }
         SLuint32 performanceValue = SL_ANDROID_PERFORMANCE_NONE;
         (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_RECORDING_PRESET, &presetValue, sizeof(SLuint32));
         (*inputConfiguration)->SetConfiguration(inputConfiguration, SL_ANDROID_KEY_PERFORMANCE_MODE, &performanceValue, sizeof(SLuint32));

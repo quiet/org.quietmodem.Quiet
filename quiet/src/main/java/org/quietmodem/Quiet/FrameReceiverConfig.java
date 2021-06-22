@@ -5,6 +5,7 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.os.Build;
 import android.util.Log;
 
@@ -18,17 +19,20 @@ public class FrameReceiverConfig {
     private final long defaultNumBuffers = 3;
     private final long defaultBufferLength = 4096;
     private final int defaultSampleRate = 44100;
+    private final int defaultRecordingPreset = MediaRecorder.AudioSource.VOICE_RECOGNITION;
 
     long profile_ptr;
     long numBuffers;
     long bufferLength;
     int sampleRate;
+    int recordingPreset;
 
     public FrameReceiverConfig(android.content.Context c, String key) throws IOException {
         profile_ptr = nativeOpen(getDefaultProfiles(c), key);
         numBuffers = defaultNumBuffers;
         bufferLength = defaultBufferLength;
         sampleRate = defaultSampleRate;
+        recordingPreset = defaultRecordingPreset;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             AudioManager m = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
@@ -42,6 +46,7 @@ public class FrameReceiverConfig {
         numBuffers = defaultNumBuffers;
         bufferLength = defaultBufferLength;
         sampleRate = defaultSampleRate;
+        recordingPreset = defaultRecordingPreset;
     }
 
     public void setNumBuffers(long numBuffers) {
@@ -54,6 +59,8 @@ public class FrameReceiverConfig {
 
     public void setSampleRate(int sampleRate) { this.sampleRate = sampleRate; }
 
+    public void setRecordingPreset(int recordingPreset) { this.recordingPreset = recordingPreset; }
+
     public long getNumBuffers() {
         return numBuffers;
     }
@@ -63,6 +70,8 @@ public class FrameReceiverConfig {
     }
 
     public int getSampleRate() { return sampleRate; }
+
+    public int getRecordingPreset() { return recordingPreset; }
 
     public static String getDefaultProfiles(android.content.Context c) throws IOException {
         InputStream s = c.getResources().openRawResource(R.raw.quiet_profiles);

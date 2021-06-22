@@ -75,7 +75,8 @@ quiet_lwip_android *lwip_android_create(JNIEnv *env, quiet_lwip_driver_config *c
                                         int encoder_sample_rate,
                                         size_t decoder_num_bufs,
                                         size_t decoder_buf_len,
-                                        int decoder_sample_rate) {
+                                        int decoder_sample_rate,
+                                        int decoder_recording_preset) {
     quiet_lwip_android *e = malloc(sizeof(quiet_lwip_android));
     e->interface = quiet_lwip_create(conf, local_address, netmask, gateway);
     if (!e->interface) {
@@ -98,7 +99,8 @@ quiet_lwip_android *lwip_android_create(JNIEnv *env, quiet_lwip_driver_config *c
     e->producer->produce = quiet_lwip_get_next_audio_packet;
     e->producer->produce_arg = e->interface;
 
-    e->consumer = opensl_consumer_create(decoder_num_bufs, decoder_buf_len, decoder_sample_rate);
+    e->consumer = opensl_consumer_create(decoder_num_bufs, decoder_buf_len, decoder_sample_rate,
+                                         decoder_recording_preset);
     e->consumer->consume = quiet_lwip_recv_audio_packet;
     e->consumer->consume_arg = e->interface;
 
@@ -163,6 +165,7 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
     }
     size_t decoder_num_bufs = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.num_bufs);
     size_t decoder_buf_len = (*env)->GetLongField(env, j_dec_profile, cache.decoder_profile.buf_len);
+    int decoder_recording_preset = (*env)->GetIntField(env, j_dec_profile, cache.decoder_profile.recording_preset);
 
     jbyteArray j_hardware_addr = (jbyteArray)((*env)->GetObjectField(env, j_conf, cache.network_interface_config.hardware_address));
     size_t hardware_addr_len = (*env)->GetArrayLength(env, j_hardware_addr);
@@ -187,7 +190,8 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseNetworkInterface_nat
 
     l = lwip_android_create(env, conf, local_addr, netmask, gateway, sys, is_loopback,
                             encoder_num_bufs, encoder_buf_len, conf->encoder_rate,
-                            decoder_num_bufs, decoder_buf_len, conf->decoder_rate);
+                            decoder_num_bufs, decoder_buf_len, conf->decoder_rate,
+                            decoder_recording_preset);
 
     // l could be NULL and we may have exception thrown -- lwip_android_create handles this
 

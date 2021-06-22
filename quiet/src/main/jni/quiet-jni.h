@@ -76,6 +76,7 @@ typedef struct {
     // number of samples is num_record_channels * buf_len
     size_t num_frames;
     int sample_rate;
+    int recording_preset;
     // scratch is a mono floating point buffer that we can give to
     // quiet_decoder_consume
     float *scratch;
@@ -85,7 +86,8 @@ typedef struct {
 
 quiet_opensl_consumer *opensl_consumer_create(size_t num_buf,
                                               size_t num_frames,
-                                              int sample_rate);
+                                              int sample_rate,
+                                              int recording_preset);
 void opensl_consumer_destroy(quiet_opensl_consumer *c);
 
 typedef struct {
@@ -240,6 +242,7 @@ typedef struct {
     jfieldID num_bufs;
     jfieldID buf_len;
     jfieldID sample_rate;
+    jfieldID recording_preset;
 } java_decoder_profile_cache;
 
 typedef struct {

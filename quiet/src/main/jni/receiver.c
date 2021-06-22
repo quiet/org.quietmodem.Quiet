@@ -32,7 +32,8 @@ void android_decoder_terminate(quiet_android_decoder *dec) {
 
 quiet_android_decoder *android_decoder_create(JNIEnv *env, const quiet_decoder_options *opt,
                                               quiet_android_system *sys, bool is_loopback,
-                                              size_t num_bufs, size_t buf_len, int sample_rate) {
+                                              size_t num_bufs, size_t buf_len, int sample_rate,
+                                              int recording_preset) {
 
     if (is_loopback) {
         // ignore user-supplied buffer lengths for loopback
@@ -47,7 +48,7 @@ quiet_android_decoder *android_decoder_create(JNIEnv *env, const quiet_decoder_o
         throw_error(env, cache.system.init_exc_klass, decoder_error_format, quiet_get_last_error());
         return NULL;
     }
-    d->consumer = opensl_consumer_create(num_bufs, buf_len, sample_rate);
+    d->consumer = opensl_consumer_create(num_bufs, buf_len, sample_rate, recording_preset);
     d->consumer->consume = quiet_android_record_callback;
     d->consumer->consume_arg = d->dec;
     d->is_loopback = is_loopback;
@@ -75,8 +76,10 @@ JNIEXPORT jvm_pointer JNICALL Java_org_quietmodem_Quiet_BaseFrameReceiver_native
     size_t num_bufs = (*env)->GetLongField(env, conf, cache.decoder_profile.num_bufs);
     size_t buf_len = (*env)->GetLongField(env, conf, cache.decoder_profile.buf_len);
     int sample_rate = (*env)->GetIntField(env, conf, cache.decoder_profile.sample_rate);
+    int recording_preset = (*env)->GetIntField(env, conf, cache.decoder_profile.recording_preset);
 
-    quiet_android_decoder *dec = android_decoder_create(env, opt, sys, is_loopback, num_bufs, buf_len, sample_rate);
+    quiet_android_decoder *dec = android_decoder_create(env, opt, sys, is_loopback, num_bufs,
+                                                        buf_len, sample_rate, recording_preset);
 
     return jvm_opaque_pointer(dec);
 }

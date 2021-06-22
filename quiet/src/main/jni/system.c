@@ -300,6 +300,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     cache.decoder_profile.sample_rate =
         (*env)->GetFieldID(env, cache.decoder_profile.klass, "sampleRate", "I");
 
+    cache.decoder_profile.recording_preset =
+        (*env)->GetFieldID(env, cache.decoder_profile.klass, "recordingPreset", "I");
+
     cache.encoder.ptr =
         (*env)->GetFieldID(env, cache.encoder.klass, "enc_ptr", "J");
 
